@@ -1436,7 +1436,7 @@ static void ImGui_ImplVulkan_SwapBuffers(ImGuiViewport* viewport, void*)
     err = vkQueuePresentKHR(v->Queue, &info);
     if (err == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        ImGui_ImplVulkan_SetWindowSize(viewport, ImVec2(wd->Width, wd->Height));
+        ImGui_ImplVulkan_SetWindowSize(viewport, ImVec2(float(wd->Width), float(wd->Height)));
         
         //ImGui_ImplVulkanH_FrameSemaphores* fsd = &wd->FrameSemaphores[wd->SemaphoreIndex];
         //VkPresentInfoKHR info = {};

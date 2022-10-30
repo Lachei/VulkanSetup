@@ -1559,7 +1559,7 @@ void ImDrawList::AddPie(const ImVec2& center, float radius, ImU32 col, float per
        	// Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
             num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
     }
-    num_segments = ceilf(percentage * num_segments);
+    num_segments = static_cast<int>(ceilf(percentage * num_segments));
     
     const float a_min = (IM_PI * 2.0f) * -percentage / 2;
     const float a_max = (IM_PI * 2.0f) * percentage / 2;
@@ -1619,7 +1619,7 @@ int  ImDrawList::AddPie(const ImVec2& center, float radius, ImU32* cols, float* 
     for (int p = 0; p < pieCount; ++p)
     {
         points[1] = ImVec2(center.x + ImCos(a_min) * radius, center.y + ImSin(a_min) * radius);
-        int curSegAmt = ceilf(num_segments * percentages[p]);
+        int curSegAmt = static_cast<int>(ceilf(num_segments * percentages[p]));
         for (int i = 1; i <= curSegAmt; i++)
         {
             float a = a_min + ((float)i / (float)curSegAmt) * (a_max - a_min);

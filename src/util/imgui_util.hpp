@@ -26,7 +26,7 @@ inline void load_fonts(std::string_view font_folder, util::memory_view<float> fo
         if(entry.is_regular_file() && entry.path().has_extension() && entry.path().extension().string() == ".ttf"){
             // found regular file
             for(float size: font_sizes){
-                io.Fonts->AddFontFromFileTTF(entry.path().c_str(), size, &font_conf, io.Fonts->GetGlyphRangesDefault());
+                io.Fonts->AddFontFromFileTTF(entry.path().string().c_str(), size, &font_conf, io.Fonts->GetGlyphRangesDefault());
                 io.Fonts->AddFontFromMemoryCompressedBase85TTF(FONT_ICON_BUFFER_NAME_IGFD, size, &icons_config, icons_ranges);
             }
         }
@@ -47,7 +47,7 @@ inline VkDescriptorPool create_desriptor_pool(){
         { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
         { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
     };
-    auto pool_info = util::vk::initializers::descriptorPoolCreateInfo(pool_sizes, 1000 * pool_sizes.size(), VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+    auto pool_info = util::vk::initializers::descriptorPoolCreateInfo(pool_sizes, 1000 * static_cast<uint32_t>(pool_sizes.size()), VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
     return util::vk::create_descriptor_pool(pool_info);
 }
 

@@ -48,7 +48,7 @@ void brusher::brush(const brush_info& info)
     pc.data_address = util::vk::get_buffer_address(ds.gpu_data.header);
     pc.index_buffer_address = util::vk::get_buffer_address(tl.gpu_indices);
     pc.local_global_brush_combine = static_cast<uint32_t>(info.brush_comb);
-    pc.data_size = tl.data_size;
+    pc.data_size = static_cast<uint32_t>(tl.data_size);
 
     auto res = vkWaitForFences(globals::vk_context.device, 1, &_brush_fence, VK_TRUE, std::numeric_limits<uint64_t>::max()); util::check_vk_result(res);
     res = vkResetFences(globals::vk_context.device, 1, &_brush_fence); util::check_vk_result(res);

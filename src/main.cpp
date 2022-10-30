@@ -26,13 +26,17 @@
 #include <structures/sys_info.hpp>
 #include <structures/file_loader.hpp>
 
+#ifdef max
+#undef max
+#endif
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,VkDebugUtilsMessageTypeFlagsEXT messageType,const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,void* pUserData)
 {
     logger << logging::vulkan_validation_prefix << " " << pCallbackData->pMessage << logging::endl;
     return VK_FALSE;
 }
 
-int main(int argc,const char* argv[]){
+int main(int argc, char* argv[]){
     // variables for all of the execution
     SDL_Window*                 window{};
     ImGui_ImplVulkanH_Window    imgui_window_data;
@@ -42,7 +46,7 @@ int main(int argc,const char* argv[]){
     // init global states (including imgui) ---------------------------------------------------------------------
 
     // command line parsing
-    globals::commandline_parser.parse(util::memory_view(argv, static_cast<size_t>(argc)));
+    globals::commandline_parser.parse(util::memory_view(const_cast<const char**>(argv), static_cast<size_t>(argc)));
     if(globals::commandline_parser.isSet("help")){
         globals::commandline_parser.printHelp();
         return 0;
@@ -158,7 +162,7 @@ int main(int argc,const char* argv[]){
     auto setup_fence = util::vk::create_fence(util::vk::initializers::fenceCreateInfo());
     ImGui_ImplVulkan_CreateFontsTexture(setup_commands);
     util::vk::end_commit_command_buffer(setup_commands, globals::vk_context.graphics_queue, {}, {}, {}, setup_fence);
-    auto res = vkWaitForFences(globals::vk_context.device, 1, &setup_fence, VK_TRUE, 20e9); util::check_vk_result(res);
+    auto res = vkWaitForFences(globals::vk_context.device, 1, &setup_fence, VK_TRUE, std::numeric_limits<uint64_t>::max()); util::check_vk_result(res);
     util::vk::destroy_fence(setup_fence);
     util::vk::destroy_command_pool(setup_command_pool);
     ImGui_ImplVulkan_DestroyFontUploadObjects();
@@ -174,7 +178,7 @@ int main(int argc,const char* argv[]){
     bool                        done = false;
     bool                        rebuild_swapchain = false;
     bool                        first_frame = true;
-    id_t                        swapchain_width = 0, swapchain_height = 0;
+    int                         swapchain_width = 0, swapchain_height = 0;
     while(!done){
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.

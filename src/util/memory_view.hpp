@@ -65,7 +65,7 @@ public:
     bool equal_data(const memory_view& o) const{
         if(_size != o._size)
             return false;
-        for(auto i: util::i_range(_size)){
+        for(auto i: util::i_range(static_cast<unsigned long>(_size))) {
             if(_data[i] != o._data[i])
                 return false;
         }

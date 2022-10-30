@@ -132,7 +132,7 @@ void data_workbench::show()
                     else if(selected)
                         globals::selected_drawlists.clear();
                     else if(ImGui::GetIO().KeyShift){
-                        uint32_t start_index = util::drawlist::drawlist_index(globals::selected_drawlists.back());
+                        uint32_t start_index = static_cast<uint32_t>(util::drawlist::drawlist_index(globals::selected_drawlists.back()));
                         uint32_t end_index = ImGui::TableGetRowIndex() - 1;
                         if(start_index > end_index)
                             std::swap(start_index, end_index);

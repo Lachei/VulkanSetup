@@ -37,6 +37,11 @@ struct brush{
     mutable std::string name{};   // mutable as it should not be tracked
     bool        active{true};
 
+#ifdef WIN32
+    brush() = default;
+    brush(const change_tracker<brush>& t): ranges(t.read().ranges), lassos(t.read().lassos), id(t.read().id), name(t.read().name), active(t.read().active) {}
+#endif
+
     bool empty() const {return ranges.empty() && lassos.empty();}
 };
 using tracked_brush = change_tracker<brush>;

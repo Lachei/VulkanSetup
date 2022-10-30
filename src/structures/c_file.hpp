@@ -10,7 +10,7 @@ struct c_file{
         end     // seek from end of file
     };
 
-    c_file(std::string_view filename, std::string_view open_mode): handle(fopen(filename.data(), open_mode.data())){}
+    c_file(std::string_view filename, std::string_view open_mode) { auto res = fopen_s(&handle, filename.data(), open_mode.data()); if (res) throw std::runtime_error{std::string("c_file() failed to open ") + filename.data()}; }
     ~c_file() {fclose(handle);}
     c_file(const c_file&) = delete;
     c_file& operator=(const c_file&) = delete;

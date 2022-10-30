@@ -24,6 +24,13 @@
 #include <structures/sys_info.hpp>
 #include <structures/file_loader.hpp>
 
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
 // globals definition
 structures::logger<20> logger{};
 
@@ -84,9 +91,9 @@ VkContextInitReturnInfo vk_context::init(const VkContextInitInfo& info){
     app_info.pApplicationName = info.application_name.data();
 
     VkInstanceCreateInfo create_info{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
-    create_info.enabledExtensionCount = info.enabled_instance_extensions.size();
+    create_info.enabledExtensionCount = static_cast<uint32_t>(info.enabled_instance_extensions.size());
     create_info.ppEnabledExtensionNames = info.enabled_instance_extensions.data();
-    create_info.enabledLayerCount = info.enabled_instance_layers.size();
+    create_info.enabledLayerCount = static_cast<uint32_t>(info.enabled_instance_layers.size());
     create_info.ppEnabledLayerNames = info.enabled_instance_layers.data();
     create_info.pApplicationInfo = &app_info;
 
@@ -94,7 +101,6 @@ VkContextInitReturnInfo vk_context::init(const VkContextInitInfo& info){
     util::check_vk_result(res);
 
     // go through all physical devices, check for available physical device features
-    int bestFit{-1};
     uint32_t gpu_count;
     res = vkEnumeratePhysicalDevices(instance, &gpu_count, NULL);
     util::check_vk_result(res);
@@ -104,7 +110,7 @@ VkContextInitReturnInfo vk_context::init(const VkContextInitInfo& info){
     res = vkEnumeratePhysicalDevices(instance, &gpu_count, physical_devices.data());
     util::check_vk_result(res);
 
-    struct score_index{long score; int index;};
+    struct score_index{int64_t score; int index;};
     std::vector<score_index> scores(gpu_count);
     for(int i: util::i_range(gpu_count)){
         scores[i].index = i;
@@ -237,9 +243,9 @@ VkContextInitReturnInfo vk_context::init(const VkContextInitInfo& info){
     VkDeviceCreateInfo device_create_info{};
     device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_create_info.pNext = &available_device_features.feature;
-    device_create_info.queueCreateInfoCount = queue_info.size();
+    device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_info.size());
     device_create_info.pQueueCreateInfos = queue_info.data();
-    device_create_info.enabledExtensionCount = info.enabled_device_extensions.size();
+    device_create_info.enabledExtensionCount = static_cast<uint32_t>(info.enabled_device_extensions.size());
     device_create_info.ppEnabledExtensionNames = info.enabled_device_extensions.data();
     res = vkCreateDevice(physical_device, &device_create_info, allocation_callbacks, &device);
     util::check_vk_result(res);
@@ -517,7 +523,7 @@ void stager::add_staging_task(const staging_image_info& stage_info){
     _task_semaphore.release();
 }
 void stager::set_staging_buffer_size(size_t size){
-    _staging_buffer_size = util::align(size, 512ul);
+    _staging_buffer_size = util::align<size_t>(size, 512ul);
 }
 void stager::wait_for_completion(){
     ++_wait_completion;
@@ -579,7 +585,7 @@ void stager::_task_thread_function(){
         if(data_size > buffer_size / 2){
             // get max number of rows
             uint32_t row_size = cur.image_extent.width * cur.bytes_per_pixel;
-            uint32_t max_rows = buffer_size / 2 / row_size;
+            uint32_t max_rows = static_cast<uint32_t>(buffer_size / 2 / row_size);
             upload_size = max_rows * row_size;
         }
         for(structures::min_max<size_t> cur_span{0, upload_size}; cur_span.min < data_size && !_thread_finish; cur_span.min = cur_span.max, cur_span.max += upload_size, _fence_index = (++_fence_index) % _task_fences.size()){
@@ -606,10 +612,10 @@ void stager::_task_thread_function(){
             image_copy.bufferOffset = _fence_index * (buffer_size / 2);
             image_copy.imageSubresource = cur.subresource_layers;
             image_copy.imageOffset = cur.image_offset;
-            image_copy.imageOffset.z += cur_span.min / cur.image_extent.width / cur.image_extent.height / cur.bytes_per_pixel;
-            image_copy.imageOffset.y += cur_span.min * cur.bytes_per_pixel % (cur.image_extent.width * cur.image_extent.height) / cur.image_extent.width;
+            image_copy.imageOffset.z += static_cast<uint32_t>(cur_span.min / cur.image_extent.width / cur.image_extent.height / cur.bytes_per_pixel);
+            image_copy.imageOffset.y += static_cast<uint32_t>(cur_span.min * cur.bytes_per_pixel % (cur.image_extent.width * cur.image_extent.height) / cur.image_extent.width);
             image_copy.imageExtent = cur.image_extent;
-            image_copy.imageExtent.height = copy_size / cur.image_extent.width / cur.bytes_per_pixel;
+            image_copy.imageExtent.height = static_cast<uint32_t>(copy_size / cur.image_extent.width / cur.bytes_per_pixel);
             image_copy.imageExtent.depth = 1;
 
             if(cur.transfer_dir == transfer_direction::upload){
@@ -728,7 +734,7 @@ void file_loader::_task_thread_function(){
         // loading the data
         c_file file(cur->src, "rb");
         if(cur->src_offset)
-            file.seek(cur->src_offset);
+            file.seek(static_cast<long>(cur->src_offset));
         auto read_bytes = file.read(cur->dst);
         if(read_bytes != cur->dst.byte_size())
             ::logger << logging::warning_prefix << " file_loader::_task_thread_function() Not all bytes for loading task were loaded. Loaded " << float(read_bytes) / (1<<20) << "MBytes from " << float(cur->dst.byte_size()) / (1<<20) << "MBytes requested." << logging::endl;

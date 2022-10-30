@@ -9,7 +9,7 @@ public:
     i_range(unsigned long begin, unsigned long end, long step = 1):
      _begin(begin), _end(end), _step(step){
         assert(step != 0 && ((begin > end && step < 0) || step > 0) && "Infinit loop detected");
-        assert(((end - begin) % step == 0 || -(end - begin) % -step == 0) && "range results in an infinit loop");
+        assert((static_cast<int64_t>(end - static_cast<int64_t>(begin)) % step == 0 || -static_cast<int64_t>(end - static_cast<int64_t>(begin)) % -step == 0) && "range results in an infinit loop");
     }; 
 
     class iterator {
@@ -36,7 +36,7 @@ private:
 class size_range{
 public:
     template<class T>
-    size_range(const T& sizeable): _end(sizeable.size()){};
+    size_range(const T& sizeable): _end(static_cast<unsigned long>(sizeable.size())){};
 
     class iterator{
         friend class size_range;

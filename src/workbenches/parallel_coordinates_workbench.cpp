@@ -48,8 +48,8 @@ void parallel_coordinates_workbench::_swap_attributes(const attribute_order_info
     auto from_it = std::find(attributes_order_info().begin(), attributes_order_info().end(), from);
     auto to_it = std::find(attributes_order_info().begin(), attributes_order_info().end(), to);
     if(ImGui::IsKeyDown(ImGuiKey_ModCtrl)){
-        int from_ind = std::distance(attributes_order_info().begin(), from_it);
-        int to_ind = std::distance(attributes_order_info().begin(), to_it);
+        int from_ind = static_cast<int>(std::distance(attributes_order_info().begin(), from_it));
+        int to_ind = static_cast<int>(std::distance(attributes_order_info().begin(), to_it));
         int lower = std::min(from_ind, to_ind);
         int higher = std::max(from_ind, to_ind);
         int direction = from_ind < to_ind ? -1 : 1; // direction is the shuffle direction of all elements except from
@@ -123,12 +123,12 @@ void parallel_coordinates_workbench::show(){
             ++labels_count;
 
     constexpr float tick_width = 10;
-    const size_t padding_side = 10;
+    const float padding_side = 10;
     const ImVec2 button_size{70, 20};
-    const size_t gap = (content_size.x - 2 * padding_side) / (labels_count - 1);
-    const size_t button_gap = (content_size.x - 2 * padding_side - button_size.x) / (labels_count - 1);
+    const float gap = (content_size.x - 2 * padding_side) / (labels_count - 1);
+    const float button_gap = (content_size.x - 2 * padding_side - button_size.x) / (labels_count - 1);
 
-    size_t cur_offset{};
+    float cur_offset{};
     ImGui::Dummy({1, 1});
     // attribute labels
     for(const auto& att_ref: attributes_order_info.read()){
@@ -138,7 +138,7 @@ void parallel_coordinates_workbench::show(){
         ImGui::SameLine(cur_offset);
         
         std::string name = attributes.read()[att_ref.attribut_index].display_name;
-        int text_size = ImGui::CalcTextSize(name.c_str()).x;
+        float text_size = ImGui::CalcTextSize(name.c_str()).x;
         if(text_size > button_size.x){
             //add ellipsis at the end of the text
             bool too_long = true;
@@ -235,7 +235,7 @@ void parallel_coordinates_workbench::show(){
                 tick_val /= dec;
                 tick_val = double(int(tick_val));
                 tick_val *= dec;
-                float y = (tick_val - attribute.bounds.read().max) / (attribute.bounds.read().min - attribute.bounds.read().max) * pic_size.y + pic_pos.y;
+                float y = static_cast<float>((tick_val - attribute.bounds.read().max) / (attribute.bounds.read().min - attribute.bounds.read().max) * pic_size.y + pic_pos.y);
                 ImGui::GetWindowDrawList()->AddLine({x - tick_width / 2, y}, {x + tick_width / 2, y}, line_col);
             }
             ++att_pos;

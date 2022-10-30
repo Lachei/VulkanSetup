@@ -37,7 +37,7 @@ load_result<float> open_netcdf_float(std::string_view filename, memory_view<stru
     }
     load_result<float> ret{};
     for(const auto& d: netcdf.get_dimension_infos())
-        ret.data.dimension_sizes.push_back(d.size);
+        ret.data.dimension_sizes.push_back(static_cast<uint32_t>(d.size));
     
     for(int var: util::size_range(variables)){
         if(query_attributes.size() > var && !query_attributes[var].is_active)
@@ -70,7 +70,7 @@ load_result<half> open_netcdf_half(std::string_view filename, memory_view<struct
     }
     load_result<half> ret{};
     for(const auto& d: netcdf.get_dimension_infos())
-        ret.data.dimension_sizes.push_back(d.size);
+        ret.data.dimension_sizes.push_back(static_cast<uint32_t>(d.size));
     
     for(int var: util::size_range(variables)){
         if(query_attributes.size() > var && !query_attributes[var].is_active)
@@ -147,13 +147,13 @@ load_result<T> open_csv_impl(std::string_view filename, memory_view<structures::
         for(std::string_view variable; getline(line, variable, ',');){
             if(variable[0] == '\"'){
                 if(variable.back() != '\"'){
-                    auto start = variable.begin();
+                    auto start = variable.data();
                     getline(line, variable, '\"');
                     std::string_view tmp; getline(line, tmp, ',');      // skipping things until komma
-                    variable = std::string_view(start + 1, variable.end() - start);
+                    variable = std::string_view(start + 1, variable.data() + variable.size() - start);
                 }
                 else
-                    variable = std::string_view(variable.begin() + 1, variable.size() - 2);
+                    variable = std::string_view(variable.data() + 1, variable.size() - 2);
             }
             variable_names.push_back(std::string(variable));
         }
@@ -177,13 +177,13 @@ load_result<T> open_csv_impl(std::string_view filename, memory_view<structures::
 
             if(element[0] == '\"'){
                 if(element.back() != '\"'){
-                    auto start = element.begin();
+                    auto start = element.data();
                     getline(line, element, '\"');
                     std::string_view tmp; getline(line, tmp, ',');      // skipping things until komma
-                    element = std::string_view(start + 1, element.end() - start);
+                    element = std::string_view(start + 1, element.data() + element.size() - start);
                 }
                 else
-                    element = std::string_view(element.begin() + 1, element.size() - 2);
+                    element = std::string_view(element.data() + 1, element.size() - 2);
 
                 trim_inplace(element);
             }
@@ -195,7 +195,7 @@ load_result<T> open_csv_impl(std::string_view filename, memory_view<structures::
             
             float val{};
             if(element.size()){
-                auto parse_res = fast_float::from_chars(element.begin(), element.end(), val);
+                auto parse_res = fast_float::from_chars(element.data(), element.data() + element.size(), val);
                 if(parse_res.ec != std::errc{}){    // parsing error -> exchnage for category
                     std::string el(element);
                     if(ret.attributes[var].categories.count(el) > 0)
@@ -223,7 +223,7 @@ load_result<T> open_csv_impl(std::string_view filename, memory_view<structures::
         std::map<T, T> category_conversion;
         uint32_t counter{};
         for(auto& [category, value]: categories){
-            T val = counter++;
+            T val = static_cast<T>(counter++);
             category_conversion[value] = val;
             value = val;
         }
@@ -484,7 +484,7 @@ globals::dataset_t open_dataset(std::string_view filename, memory_view<structure
     
     // gpu_data setup
     const size_t header_size = std::visit([](auto&& data) {return util::data::header_size(data);}, dataset.read().cpu_data.read());
-    const uint32_t column_count = std::visit([](auto&& data) {return data.columns.size();}, dataset.read().cpu_data.read());
+    const uint32_t column_count = std::visit([](auto&& data) {return static_cast<uint32_t>(data.columns.size());}, dataset.read().cpu_data.read());
     VkBufferUsageFlags buffer_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     auto header_info = util::vk::initializers::bufferCreateInfo(buffer_usage, header_size);
     auto header_alloc_info = util::vma::initializers::allocationCreateInfo();
@@ -560,12 +560,12 @@ void convert_templatelist(const structures::templatelist_convert_data& convert_d
                 templatelist.indices.resize((convert_data.trim.max - convert_data.trim.min + convert_data.subsampling - 1) / convert_data.subsampling);
             if(convert_data.random_subsampling){
                 std::default_random_engine generator;
-                std::uniform_int_distribution<uint32_t> distribution(convert_data.trim.min, convert_data.trim.max);
+                std::uniform_int_distribution<uint32_t> distribution(static_cast<uint32_t>(convert_data.trim.min), static_cast<uint32_t>(convert_data.trim.max));
                 for(uint32_t& u: templatelist.indices)
                     u = distribution(generator);
             }
             else{
-                for(uint32_t i: util::i_range(convert_data.trim.min, convert_data.trim.max, convert_data.subsampling))
+                for(uint32_t i: util::i_range(static_cast<uint32_t>(convert_data.trim.min), static_cast<uint32_t>(convert_data.trim.max), convert_data.subsampling))
                     templatelist.indices[(i - convert_data.trim.min) / convert_data.subsampling] = i;
             }
             auto indices_info = util::vk::initializers::bufferCreateInfo(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, templatelist.indices.size() * sizeof(templatelist.indices[0]));
@@ -581,9 +581,9 @@ void convert_templatelist(const structures::templatelist_convert_data& convert_d
                     for(uint32_t i: templatelist.indices){
                         auto val = data(i, var);
                         if(val < templatelist.min_maxs[var].min)
-                            templatelist.min_maxs[var].min = val;
+                            templatelist.min_maxs[var].min = static_cast<float>(val);
                         if(val > templatelist.min_maxs[var].max)
-                            templatelist.min_maxs[var].max = val;
+                            templatelist.min_maxs[var].max = static_cast<float>(val);
                     }
                 }
             }, ds.read().cpu_data.read());

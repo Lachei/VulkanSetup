@@ -27,8 +27,8 @@ void parallel_coordinates_renderer::_pre_render_commands(VkCommandBuffer command
     vkCmdBindPipeline(commands, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_data.pipeline);
     vkCmdBindDescriptorSets(commands, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_data.pipeline_layout, 0, 1, &globals::descriptor_sets[util::global_descriptors::heatmap_descriptor_id]->descriptor_set, 0, {});
     VkViewport viewport{};
-    viewport.width = output_specs.width;
-    viewport.height = output_specs.height;
+    viewport.width = static_cast<float>(output_specs.width);
+    viewport.height = static_cast<float>(output_specs.height);
     viewport.maxDepth = 1;
     vkCmdSetViewport(commands, 0, 1, &viewport);
     VkRect2D scissor{};
@@ -222,9 +222,9 @@ parallel_coordinates_renderer& parallel_coordinates_renderer::instance(){
 
 void parallel_coordinates_renderer::render(const render_info& info){
     struct attribute_infos{
-        uint     attribute_count;                // amount of active attributes
-        uint     _, __;
-        uint     data_flags;
+        uint32_t attribute_count;                // amount of active attributes
+        uint32_t _t, __t;
+        uint32_t data_flags;
     };
 
     std::vector<uint32_t> active_attribute_indices;     // these inlcude the order
@@ -247,7 +247,7 @@ void parallel_coordinates_renderer::render(const render_info& info){
     auto pipeline_info = get_or_create_pipeline(out_specs);
 
     structures::dynamic_struct<attribute_infos, ImVec4> attribute_infos(active_attribute_indices.size());
-    attribute_infos->attribute_count = active_attribute_indices.size();
+    attribute_infos->attribute_count = static_cast<uint32_t>(active_attribute_indices.size());
     attribute_infos->data_flags = {};
     for(int active_attribute_index: util::size_range(active_attribute_indices)){
         uint32_t cur_attribute_index = active_attribute_indices[active_attribute_index];
@@ -262,7 +262,7 @@ void parallel_coordinates_renderer::render(const render_info& info){
 
     util::vma::upload_data(attribute_infos.data(), attribute_infos_gpu);
     if(_render_commands.size())
-        vkFreeCommandBuffers(globals::vk_context.device, _command_pool, _render_commands.size(), _render_commands.data());
+        vkFreeCommandBuffers(globals::vk_context.device, _command_pool, static_cast<uint32_t>(_render_commands.size()), _render_commands.data());
     _render_commands.resize(1);
     _render_commands[0] = util::vk::create_begin_command_buffer(_command_pool);
     _pre_render_commands(_render_commands[0], out_specs);
@@ -307,10 +307,10 @@ void parallel_coordinates_renderer::render(const render_info& info){
             pc.priorities_address = util::vk::get_buffer_address(drawlist.priority_colors_gpu);
             pc.index_buffer_address = util::vk::get_buffer_address(dl.drawlist_read().const_templatelist().gpu_indices);
             pc.activation_bitset_address = util::vk::get_buffer_address(drawlist.active_indices_bitset_gpu);
-            pc.vertex_count_per_line = active_attribute_indices.size();
+            pc.vertex_count_per_line = static_cast<uint32_t>(active_attribute_indices.size());
             pc.color = dl.drawlist_read().appearance_drawlist.read().color;
             vkCmdPushConstants(_render_commands.back(), pipeline_info.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
-            vkCmdDraw(_render_commands.back(), pc.vertex_count_per_line, cur_batch_size, 0, cur_offset);
+            vkCmdDraw(_render_commands.back(), pc.vertex_count_per_line, static_cast<uint32_t>(cur_batch_size), 0, static_cast<uint32_t>(cur_offset));
 
             cur_offset += cur_batch_size;
             cur_batch_lines += cur_batch_size;

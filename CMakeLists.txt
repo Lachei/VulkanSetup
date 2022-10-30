@@ -6,7 +6,7 @@ enable_testing()
 
 if(WIN32)
     message("Using custom FindSDL2.cmake for windows")
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/PCViewer/cmake/Win/")
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/src/cmake/Win/")
 endif()
 
 if(UNIX AND CMAKE_BUILD_TYPE MATCHES Debug)

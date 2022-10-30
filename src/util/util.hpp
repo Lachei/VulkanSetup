@@ -23,17 +23,4 @@ inline ImU32 vec4_to_imu32(const ImVec4& v){
 inline ImVec2 vec2_add_vec2(const ImVec2& a, const ImVec2& b){
     return {a.x + b.x, a.y + b.y};
 }
-
-inline std::vector<uint32_t> bool_vector_to_uint(const std::vector<bool>& v){
-    std::vector<uint32_t> res((v.size() + 31) / 32);
-    for(size_t i: size_range(res)){
-        const size_t start = i * 32;
-        const size_t end = (i + 1) * 32;
-        uint32_t bits{};
-        for(size_t j: i_range(start, end))
-            bits |= v[j] << (i % 32);
-        res[i] = bits;
-    }
-    return res;
-}
 }

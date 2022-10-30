@@ -6621,7 +6621,7 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
     if (frame_size.y == 0.0f)
         frame_size.y = label_size.y + (style.FramePadding.y * 2);
     
-        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
+    const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
     const ImRect inner_bb(frame_bb.Min + style.FramePadding, frame_bb.Max - style.FramePadding);
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0));
     ItemSize(total_bb, style.FramePadding.y);
@@ -6742,9 +6742,9 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
             }
         else if (plot_type == ImGuiPlotType_Histogram_Vertical) {
             if (pos1.y >= pos0.y + 2.0f)
-               pos1.y -= 1.0f;
+                pos1.y -= 1.0f;
             
-               window->DrawList->AddRectFilled(pos0, pos1, v_hovered == v1_idx ? col_hovered : col_base);
+            window->DrawList->AddRectFilled(pos0, pos1, v_hovered == v1_idx ? col_hovered : col_base);
             
         }
         
